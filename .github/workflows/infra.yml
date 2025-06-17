@@ -1,0 +1,97 @@
+name: Ml-ops
+on:
+  workflow_dispatch:
+    inputs:
+      do_plan:
+        description: "Run terraform plan?"
+        required: false
+        default: "true"
+        type: boolean
+      do_apply:
+        description: "Run terraform apply?"
+        required: false
+        default: "false"
+        type: boolean
+      do_destroy:
+        description: "Run terraform destroy?"
+        required: false
+        default: "false"
+        type: boolean
+ 
+jobs:
+  terraform:
+    name: Use-case-02
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+ 
+    env:
+      TF_VERSION: '1.10'
+      AWS_REGION: us-east-1
+      ROLE_TO_ASSUME: arn:aws:iam::144317819575:role/ALB_Role
+      TF_LOG: DEBUG
+      TF_LOG_PATH: log.txt
+ 
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+ 
+    - name: Configure AWS credentials via OIDC
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    # - name: Download terraform.tfvars from S3
+    #   run: aws s3 cp s3://pavithra-bucket001/vars.tfvars ./Use-case-02/infra/vars.tfvars
+ 
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    # - name: Terraform Format Check
+    #   run: terraform fmt -recursive
+ 
+ 
+    - name: Terraform Init
+      run: terraform init
+ 
+    # - name: Terraform Validate
+    #   working-directory: ./Use-case-02/infra
+    #   run: terraform validate
+
+    # - name: Install tflint
+    #   run: |
+    #     curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+ 
+    # - name: Run tflint
+    #   run: tflint --config=./.tflint.hcl
+    #   # run: tflint --init && tflint
+ 
+    # - name: Install Checkov
+    #   run: |
+    #     python3 -m pip install --upgrade pip
+    #     pip install checkov
+ 
+    # - name: Run Checkov Scan
+    #   run: checkov -d ./ --skip-path .github/* --soft-fail
+ 
+    - name: Terraform Plan
+      if: ${{ github.event.inputs.do_plan == 'true' }}
+      run: terraform plan 
+ 
+    - name: Terraform Apply (manual)
+      if: ${{ github.event_name == 'workflow_dispatch' &&  github.event.inputs.do_apply == 'true' }}
+      run: terraform apply -auto-approve
+
+    - name: Terraform destroy (manual)
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.do_destroy == 'true' }}
+      run: terraform destroy -var-file="vars.tfvars" -auto-approve 
+
+    - name: Terraform logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: Terraform-logs
+        path: ./Use-case-02/infra/log.txt
