@@ -27,9 +27,9 @@ jobs:
       contents: read
  
     env:
-      TF_VERSION: '1.10'
+      TF_VERSION: '1.11.4'
       AWS_REGION: us-east-1
-      ROLE_TO_ASSUME: arn:aws:iam::144317819575:role/ALB_Role
+      ROLE_TO_ASSUME: arn:aws:iam::921666318654:role/Abhi-OIDC-Role
       TF_LOG: DEBUG
       TF_LOG_PATH: log.txt
  
