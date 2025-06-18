@@ -80,11 +80,11 @@ jobs:
     #   run: checkov -d ./ --skip-path .github/* --soft-fail
  
     - name: Terraform Plan
-      if: ${{ github.event.inputs.do_plan == 'true' }}
+      # if: ${{ github.event.inputs.do_plan == 'true' }}
       run: terraform plan 
  
     - name: Terraform Apply
-      if: ${{ github.event_name == 'workflow_dispatch' &&  github.event.inputs.do_apply == 'true' }}
+      # if: ${{ github.event_name == 'workflow_dispatch' &&  github.event.inputs.do_apply == 'true' }}
       run: terraform apply -auto-approve
 
     # - name: Terraform destroy (manual)
